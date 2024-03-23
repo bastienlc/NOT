@@ -27,15 +27,16 @@ SOFTWARE.
 from .distributions import LoaderSampler
 
 import numpy as np
+import torch
 from torch.utils.data import Subset, DataLoader
 from torchvision.transforms import Compose, Resize, Normalize, ToTensor
 from torchvision.datasets import ImageFolder
+import torch.nn as nn
 
 def freeze(model):
     for p in model.parameters():
         p.requires_grad_(False)
     model.eval()
-
 
 def unfreeze(model):
     for p in model.parameters():
@@ -43,12 +44,24 @@ def unfreeze(model):
     model.train(True)
 
 def load_dataset(name, path, img_size=64, batch_size=64, test_ratio=0.1, device='cuda'):
-    if path.contains("cartoonset"):
+    if name in ['celeba_female', 'celeba_male', 'aligned_anime_faces', 'describable_textures', 'cartoonset100k']:
         transform = Compose([Resize((img_size, img_size)), ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset = ImageFolder(path, transform=transform)
     else:
-        raise NotImplementedError
-    idx = np.random.RandomState(seed=0xBADBEEF).permutation(len(dataset))
+        raise Exception('Unknown dataset')
+        
+    if name in ['celeba_female', 'celeba_male']:
+        with open('../datasets/list_attr_celeba.txt', 'r') as f:
+            lines = f.readlines()[2:]
+        if name == 'celeba_female':
+            idx = [i for i in list(range(len(lines))) if lines[i].replace('  ', ' ').split(' ')[21] == '-1']
+        else:
+            idx = [i for i in list(range(len(lines))) if lines[i].replace('  ', ' ').split(' ')[21] != '-1']
+    elif dataset == 'describable_textures':
+        idx = np.random.RandomState(seed=0xBADBEEF).permutation(len(dataset))
+    else:
+        idx = list(range(len(dataset)))
+        
     test_size = int(len(idx) * test_ratio)
     train_idx, test_idx = idx[:-test_size], idx[-test_size:]
     train_set, test_set = Subset(dataset, train_idx), Subset(dataset, test_idx)
@@ -56,3 +69,11 @@ def load_dataset(name, path, img_size=64, batch_size=64, test_ratio=0.1, device=
     train_sampler = LoaderSampler(DataLoader(train_set, shuffle=True, num_workers=8, batch_size=batch_size), device)
     test_sampler = LoaderSampler(DataLoader(test_set, shuffle=True, num_workers=8, batch_size=batch_size), device)
     return train_sampler, test_sampler
+
+def weights_init_D(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+    elif classname.find('BatchNorm') != -1:
+        nn.init.constant_(m.weight, 1)
+        nn.init.constant_(m.bias, 0)

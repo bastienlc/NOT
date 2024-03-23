@@ -210,3 +210,29 @@ def plot_generated_2D(X_sampler, Y_sampler, T, ZD, Z_STD):
 
     fig.tight_layout()
     return fig, axes
+
+def plot_images(X, Y, T):
+    freeze(T);
+    with torch.no_grad():
+        T_X = T(X)
+        imgs = torch.cat([X, T_X, Y]).to('cpu').permute(0,2,3,1).mul(0.5).add(0.5).numpy().clip(0,1)
+
+    fig, axes = plt.subplots(3, 10, figsize=(15, 4.5), dpi=150)
+    for i, ax in enumerate(axes.flatten()):
+        ax.imshow(imgs[i])
+        ax.get_xaxis().set_visible(False)
+        ax.set_yticks([])
+        
+    axes[0, 0].set_ylabel('X', fontsize=24)
+    axes[1, 0].set_ylabel('T(X)', fontsize=24)
+    axes[2, 0].set_ylabel('Y', fontsize=24)
+    
+    fig.tight_layout(pad=0.001)
+    torch.cuda.empty_cache(); gc.collect()
+    return fig, axes
+
+def plot_random_images(X_sampler, Y_sampler, T):
+    X = X_sampler.sample(10)
+    Y = Y_sampler.sample(10)
+    return plot_images(X, Y, T)
+
