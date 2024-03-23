@@ -99,3 +99,21 @@ class StandardNormalScaler(Transformer):
             batch -= self.mean
             batch @= self.inv_multiplier
         return batch
+
+class LoaderSampler(Sampler):
+    def __init__(self, loader, device='cuda'):
+        super(LoaderSampler, self).__init__(device)
+        self.loader = loader
+        self.it = iter(self.loader)
+        
+    def sample(self, size=5):
+        assert size <= self.loader.batch_size
+        try:
+            batch, _ = next(self.it)
+        except StopIteration:
+            self.it = iter(self.loader)
+            return self.sample(size)
+        if len(batch) < size:
+            return self.sample(size)
+            
+        return batch[:size].to(self.device)

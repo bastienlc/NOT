@@ -24,6 +24,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from .distributions import LoaderSampler
+
+import numpy as np
+from torch.utils.data import Subset, DataLoader
+from torchvision.transforms import Compose, Resize, Normalize, ToTensor
+from torchvision.datasets import ImageFolder
 
 def freeze(model):
     for p in model.parameters():
@@ -35,3 +41,18 @@ def unfreeze(model):
     for p in model.parameters():
         p.requires_grad_(True)
     model.train(True)
+
+def load_dataset(name, path, img_size=64, batch_size=64, test_ratio=0.1, device='cuda'):
+    if path.contains("cartoonset"):
+        transform = Compose([Resize((img_size, img_size)), ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset = ImageFolder(path, transform=transform)
+    else:
+        raise NotImplementedError
+    idx = np.random.RandomState(seed=0xBADBEEF).permutation(len(dataset))
+    test_size = int(len(idx) * test_ratio)
+    train_idx, test_idx = idx[:-test_size], idx[-test_size:]
+    train_set, test_set = Subset(dataset, train_idx), Subset(dataset, test_idx)
+
+    train_sampler = LoaderSampler(DataLoader(train_set, shuffle=True, num_workers=8, batch_size=batch_size), device)
+    test_sampler = LoaderSampler(DataLoader(test_set, shuffle=True, num_workers=8, batch_size=batch_size), device)
+    return train_sampler, test_sampler
