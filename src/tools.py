@@ -26,6 +26,7 @@ SOFTWARE.
 
 from .distributions import LoaderSampler
 
+from PIL import Image
 import numpy as np
 import torch
 from torch.utils.data import Subset, DataLoader
@@ -51,7 +52,7 @@ def load_dataset(name, path, img_size=64, batch_size=64, test_ratio=0.1, device=
         raise Exception('Unknown dataset')
         
     if name in ['celeba_female', 'celeba_male']:
-        with open('../datasets/list_attr_celeba.txt', 'r') as f:
+        with open('../../data/img_align_celeba/list_attr_celeba.txt', 'r') as f:
             lines = f.readlines()[2:]
         if name == 'celeba_female':
             idx = [i for i in list(range(len(lines))) if lines[i].replace('  ', ' ').split(' ')[21] == '-1']
@@ -77,3 +78,26 @@ def weights_init_D(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
+
+def fig2data ( fig ):
+    """
+    @brief Convert a Matplotlib figure to a 4D numpy array with RGBA channels and return it
+    @param fig a matplotlib figure
+    @return a numpy 3D array of RGBA values
+    """
+    # draw the renderer
+    fig.canvas.draw ( )
+ 
+    # Get the RGBA buffer from the figure
+    w,h = fig.canvas.get_width_height()
+    buf = np.fromstring ( fig.canvas.tostring_argb(), dtype=np.uint8 )
+    buf.shape = ( w, h,4 )
+ 
+    # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to have it in RGBA mode
+    buf = np.roll ( buf, 3, axis = 2 )
+    return buf
+
+def fig2img ( fig ):
+    buf = fig2data ( fig )
+    w, h, d = buf.shape
+    return Image.frombytes( "RGBA", ( w ,h ), buf.tostring( ) )

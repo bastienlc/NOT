@@ -28,7 +28,6 @@ import os, sys
 sys.path.append("..")
 sys.path.append("../..")
 
-import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -72,11 +71,11 @@ DATASET2, DATASET2_PATH = 'cartoonset100k', '../../data/cartoonset100k'
 
 T_ITERS = 10
 f_LR, T_LR = 1e-4, 1e-4
-IMG_SIZE = 64
+IMG_SIZE = 128
 
-BATCH_SIZE = 1024 
+BATCH_SIZE = 64 
 
-PLOT_INTERVAL = 10
+PLOT_INTERVAL = 100
 COST = 'mse' # Mean Squared Error
 CPKT_INTERVAL = 2000
 MAX_STEPS = 100001
@@ -160,19 +159,19 @@ for step in tqdm(range(MAX_STEPS)):
         
         fig, axes = plot_images(X_fixed, Y_fixed, T)
         wandb.log({'Fixed Images' : [wandb.Image(fig2img(fig))]}, step=step) 
-        #plt.show(fig); plt.close(fig) 
+        plt.close(fig) 
         
         fig, axes = plot_random_images(X_sampler,  Y_sampler, T)
         wandb.log({'Random Images' : [wandb.Image(fig2img(fig))]}, step=step) 
-        #plt.show(fig); plt.close(fig) 
+        plt.close(fig) 
         
         fig, axes = plot_images(X_test_fixed, Y_test_fixed, T)
         wandb.log({'Fixed Test Images' : [wandb.Image(fig2img(fig))]}, step=step) 
-        #plt.show(fig); plt.close(fig) 
+        plt.close(fig) 
         
         fig, axes = plot_random_images(X_test_sampler, Y_test_sampler, T)
         wandb.log({'Random Test Images' : [wandb.Image(fig2img(fig))]}, step=step) 
-        #plt.show(fig); plt.close(fig) 
+        plt.close(fig) 
     
     if step % CPKT_INTERVAL == CPKT_INTERVAL - 1:
         freeze(T); 

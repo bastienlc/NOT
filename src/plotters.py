@@ -26,6 +26,7 @@ SOFTWARE.
 
 import matplotlib.pyplot as plt
 import ot
+import gc
 import torch
 from matplotlib import collections as mc
 
