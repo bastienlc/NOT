@@ -32,6 +32,8 @@
 \usepackage{authblk}
 \usepackage{graphics}
 \usepackage[font=small,labelfont=bf]{caption}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 
 \setlength{\belowcaptionskip}{-10pt}
 \newcommand{\specialcell}[2][c]{%
@@ -51,6 +53,8 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\minimize}{minimize}
 \DeclareMathOperator*{\Argmin}{\text{Argmin}}
+\DeclareMathOperator*{\Argmax}{\text{Argmax}}
+\DeclareMathOperator*{\Cost}{\text{Cost}}
 
 \title{Generative modeling project : Neural Optimal Transport}
 \author[1]{Paul Barbier}
@@ -61,30 +65,88 @@
 
 \maketitle
 
-\begin{contribstatement}
-\end{contribstatement}
-
 \section{Introduction}
 
-Optimal Transport (OT) is a mathematical framework that aims to find the most efficient way to transport a distribution of mass to another. This framework has been used extensively in the context of generative models, for instance as a loss function in the training of Generative Adversarial Networks (GANs) or by learning a mapping between two distributions. In this project, we aim to study the paper "Neural Optimal Transport" (Korotin, 2023) \cite{korotin-2022} which introduces an algorithm to train a neural network to learn the optimal transport between two distributions.
+Optimal Transport (OT) is a mathematical framework that aims to find the most efficient way to transport a distribution of mass to another. This framework has been used extensively in the context of generative models, for instance as a loss function in the training of Generative Adversarial Networks (GANs) or by learning a mapping between two distributions. In this project, we aim to study the paper "Neural Optimal Transport" (Korotin, 2023) \cite{korotin-2022} which introduces an algorithm to train a neural network to learn the optimal transport between two distributions, with applications in image generation. We will introduce some optimal transport problems in various formulations, but we will focus on giving a general overview and some details and hypotheses will be omitted for the sake of clarity.
 
 \section{Background on Optimal Transport}
 
-Let $\mu$ and $\nu$ be two probability distributions on $\mathcal{X}$ and $\mathcal{Y}$ respectively (typically $\mathcal{X}, \mathcal{Y}=\R^n,\R^m$). To give a meaning to "efficiently" transporting mass, we need to define a cost function $c:\mathcal{X}\times\mathcal{Y}\to\R$ that quantifies the cost of transporting a unit of mass in $\mathcal{X}$ to one in $\mathcal{Y}$. The (Monge) optimal transport problem consists in finding a \textbf{transport map} $T^*:\mathcal{X}\to \mathcal{Y}$ such that :
-\begin{equation}
-    T^* \in \Argmin_{T\#\mu=\nu} \int_{\mathcal{X}} c(x,T(x))d\mu(x)
-\end{equation}
-where $T\#\mu$ is the pushforward distribution of $\mu$ by $T$, defined by $(T\#\mu)(A)=\mu(T^{-1}(A))$ for any measurable set $A\subset\mathcal{Y}$. This formulation calls for a deterministic mapping from $\mathcal{X}$ to $\mathcal{Y}$, which is not always desirable or feasible under general assumptions. Kantorovich introduced  a more general OT problem that aims at finding a \textbf{transport plan} $\pi^*\in \Pi(\mu,\nu)$ in the set of joint distributions on $\mathcal{X}\times\mathcal{Y}$ with marginals $\mu$ and $\nu$ such that :
-\begin{equation}
-    \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)d\pi(x,y)
-\end{equation}
-In general the solution to the Kantorovich problem is stochastic, but in some cases it may be deterministic in which case it is also a solution to the Monge problem. Following this idea of stochasticity in the solution, weak OT was introduced as a relaxation of the Kantorovich problem, where the cost function is of the form $C: \mathcal{X}\times \mathcal{P}(\mathcal{Y})\to\R$. In this case the weak OT problem writes :
-\begin{equation}
-    \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}} C(x,\pi(\cdot|x))d\pi(x)
-\end{equation}
-where $\pi(\cdot|x)$ is the conditional distribution of $\pi$ given $x$ and $d\pi(x)$ is the marginal distribution of $\pi$ on $\mathcal{X}$.
+\subsection{Optimal Transport Problem}
 
-Building on this framework, (Korotin, 2023) \cite{korotin-2022} introduce \textbf{stochastic maps} $T:\mathcal{X}\times \mathcal{Z}\to \mathcal{Y}$ where $\mathcal{Z}$ is a latent space corresponding to the randomness in the transport. They show that the weak optimal transport problem can be reformulated and solved by a SGAD algorithm. This approach is particularly interesting in the context of generative modeling, as it allows to learn a stochastic mapping between two distributions.
+Let $\mu$ and $\nu$ be two probability distributions on $\mathcal{X}$ and $\mathcal{Y}$ respectively (typically $\mathcal{X}, \mathcal{Y}=\R^n,\R^m$). To give a meaning to "efficiently" transporting mass, we define a cost function $c:\mathcal{X}\times\mathcal{Y}\to\R$ that quantifies the cost of transporting a unit of mass in $\mathcal{X}$ to one in $\mathcal{Y}$. The (Monge) optimal transport problem consists in finding a \textbf{transport map} $T^*:\mathcal{X}\to \mathcal{Y}$ such that :
+\begin{equation}
+    T^* \in \Argmin_{T\#\mu=\nu} \int_{\mathcal{X}} c(x,T(x))d\mu(x) \quad\quad \Cost(\mu,\nu) = \int_{\mathcal{X}} c(x,T^*(x))d\mu(x)
+\end{equation}
+where $T\#\mu$ is the pushforward distribution of $\mu$ by $T$, defined by $(T\#\mu)(A)=\mu(T^{-1}(A))$ for any measurable set $A\subset\mathcal{Y}$. This formulation calls for a deterministic mapping from $\mathcal{X}$ to $\mathcal{Y}$, which is not always desirable or feasible under general assumptions. Kantorovich introduced  a relaxed OT problem that aims at finding a \textbf{transport plan} $\pi^*\in \Pi(\mu,\nu)$ in the set of joint distributions on $\mathcal{X}\times\mathcal{Y}$ with marginals $\mu$ and $\nu$ such that :
+\begin{equation}
+    \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)d\pi(x,y) \quad\quad \Cost(\mu,\nu) = \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)d\pi^*(x,y)
+\end{equation}
+In general the solution to the Kantorovich problem is stochastic, but in some cases it may be deterministic in which case it is also a solution to the Monge problem. Building on this idea of stochasticity in the solution, weak OT was introduced as a generalization of the Kantorovich problem, where the cost function is of the form $C: \mathcal{X}\times \mathcal{P}(\mathcal{Y})\to\R$. In this case the weak OT problem writes :
+\begin{equation}
+    \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}} C(x,\pi(\cdot|x))d\pi(x) \quad\quad \Cost(\mu,\nu) = \int_{\mathcal{X}} C(x,\pi^*(\cdot|x))d\pi^*(x)
+\end{equation}
+where $\pi(\cdot|x)$ is the conditional distribution of $\pi$ given $x$ and $d\pi(x)$ is the marginal distribution of $\pi$ on $\mathcal{X}$ (which is actually $\mu$).
+
+\subsection{Weak OT duality}
+
+For weak OT cost $C$, and $f$ defined on $\mathcal{Y}$ sufficiently regular, the weak C-transform of $f$ is defined on $\mathcal{X}$ as :
+\begin{equation}
+    f^C(x) = \inf_{\rho\in \mathcal{P}(\mathcal{Y})} \left\{C(x,\rho)-\int_{\mathcal{Y}}f(y)d\rho(y)\right\}
+\end{equation}
+The dual form of the weak OT problem is then :
+\begin{equation}
+    f^*\in\Argmax_{f} \int_{\mathcal{X}} f^C(x)d\mu(x) + \int_{\mathcal{Y}} f(y)d\nu(y) \quad\quad \Cost(\mu,\nu) = \int_{\mathcal{X}} f^{*C}(x)d\mu(x) + \int_{\mathcal{Y}} f^*(y)d\nu(y)
+\end{equation}
+
+\section{Neural Optimal Transport}
+
+In (Korotin, 2023) \cite{korotin-2022}, the authors aim to solve the weak OT problem with a neural network. First they reformulate the weak dual problem with noise outsourcing, then they introduce an algorithm to solve this problem.
+
+\subsection{Weak dual OT reformulation}
+
+From now on we consider $\mathcal{X}\subset\R^n$ and $\mathcal{Y}\subset\R^m$. We introduce $\mathcal{Z}\subset\R^d$ a latent space with a distribution $\rho\in \mathcal{P}(\mathcal{Z})$. The following result holds true under some basic assumptions on $\rho$ :
+\begin{equation}
+    f^C(x)=\inf_t \left\{C(x, T\#\rho)-\int_{\mathcal{Z}}f(t(z))d\rho(z)\right\}
+\end{equation}
+This result can be integrated against $\mu$ to replace the dual weak OT problem by a maximin problem :
+\begin{align}
+    \begin{split}
+        \Cost(\mu,\nu) & = \sup_{f} \inf_{T}
+        \int_{\mathcal{Y}}f(y)d\nu(y) + \int_{\mathcal{X}} \left( C(x, T(x,\cdot)\#\rho)-\int_{\mathcal{Z}}f(T(x,z))d\rho(z)\right)d\mu(x) \\
+                       & = \sup_{f} \inf_{T} \mathcal{L}(f,T)
+    \end{split}
+    \label{eq:weak_ot_reformulation}
+\end{align}
+where $T:\mathcal{X}\times\mathcal{Z}\to\mathcal{Y}$. The proofs of these results are in the paper \cite{korotin-2022}. This reformulation can be interpreted in the following way : the solution to the weak OT problem is a \textbf{stochastic map} $T:\mathcal{X}\times \mathcal{Z}\to \mathcal{Y}$ that is split into two parts, a deterministic part $T(x,\cdot)$ and a stochastic part $z\mapsto T(x,z)$. $\mathcal{Z}$ is a latent space that models the randomness in the transport.
+
+Solving (\ref{eq:weak_ot_reformulation}) does not necessarily yield a solution $T^*$ to the weak OT problem. However under sufficient convexity conditions on $C$ the solution to the maximin problem is a solution to the weak OT problem. With that in mind the authors introduce an algorithm to solve this problem and restrict their attention to such cost functions.
+
+\subsection{SGAD}
+
+The authors prove that the space of neural networks is rich enough to approximate stochastic maps $T$ which motivates the use of neural networks to solve (\ref{eq:weak_ot_reformulation}). $f$ and $T$ in (\ref{eq:weak_ot_reformulation}) are parametrized by neural networks $f_{\omega}$ and $T_{\theta}$ respectively. The authors use a stochastic gradient ascent descent (SGAD) algorithm to solve the problem. The algorithm is presented in Figure \ref{fig:sgad}.
+
+\begin{figure}[H]
+    \begin{algorithm}[H]
+        \caption{Stochastic Gradient Ascent Descent (SGAD) algorithm for Neural Optimal Transport}
+        \begin{algorithmic}[1]
+            \State \textbf{Input} : distributions $\mu,\nu,\rho$ accessible by samples, mapping network $T_{\theta}:\mathbb{R}^{m}\times\mathbb{R}^{n}\rightarrow\mathbb{R}^{d}$, potential network $f_{\omega}:\mathbb{R}^{n}\rightarrow\mathbb{R}$, number of inner iterations $K_{T}$, (weak) cost $C:\mathcal{X}\times\mathcal{P}(\mathcal{Y})\rightarrow\mathbb{R}$, empirical estimator $\widehat{C}\big{(}x,T(x,Z)\big{)}$ for the cost
+            \State \textbf{Output} : learned stochastic OT map $T_{\theta}$ representing an OT plan between distributions $\mu,\nu$
+            \Repeat
+            \State Sample batches $Y\sim\nu$, $X\sim\mu$, for each $x\in X$ sample batch $Z_{x}\sim\rho$
+            \State $\mathcal{L}_{f}\leftarrow\frac{1}{|X|}\sum_{x\in X}\frac{1}{|Z_{x}|}\sum_{z \in Z_{x}}f_{\omega}\big{(}T_{\theta}(x,z)\big{)}-\frac{1}{|Y|}\sum_{y\in Y}f_{ \omega}(y)$
+            \State Update $\omega$ by using $\frac{\partial\mathcal{L}_{f}}{\partial\theta}$
+            \For {$k_{T}=1,2,\ldots,K_{T}$}
+            \State Sample batch $X\sim\mu$, for each $x\in X$ sample batch $Z_{x}\sim\rho$
+            \State $\mathcal{L}_{T}\leftarrow\frac{1}{|X|}\sum_{x\in X}\big{[}\widehat{C}\big{(}x,T_{\theta}(x,Z_{x})\big{)}-\frac{1}{|Z_{x}|}\sum_{z\in Z_{x}}f_{\omega}\big{(} T_{\theta}(x,z)\big{)}\big{]}$
+            \State Update $\theta$ by using $\frac{\partial\mathcal{L}_{\theta}}{\partial\theta}$
+            \EndFor
+            \Until{converged}
+        \end{algorithmic}
+    \end{algorithm}
+    \caption{Neural Optimal Transport algorithm \cite{korotin-2022}}
+    \label{fig:sgad}
+\end{figure}
+
 
 \section{Conclusion}
 
