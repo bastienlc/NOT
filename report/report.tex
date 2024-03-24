@@ -32,6 +32,7 @@
 \usepackage{authblk}
 \usepackage{graphics}
 \usepackage[font=small,labelfont=bf]{caption}
+\captionsetup[subfigure]{justification=centering}
 
 \setlength{\belowcaptionskip}{-10pt}
 \newcommand{\specialcell}[2][c]{%
@@ -86,7 +87,75 @@ where $\pi(\cdot|x)$ is the conditional distribution of $\pi$ given $x$ and $d\p
 
 Building on this framework, (Korotin, 2023) \cite{korotin-2022} introduce \textbf{stochastic maps} $T:\mathcal{X}\times \mathcal{Z}\to \mathcal{Y}$ where $\mathcal{Z}$ is a latent space corresponding to the randomness in the transport. They show that the weak optimal transport problem can be reformulated and solved by a SGAD algorithm. This approach is particularly interesting in the context of generative modeling, as it allows to learn a stochastic mapping between two distributions.
 
+\section{Experiments}
+
+For this project, we conducted experiments using the code provided by the author. You can find our scripts at \href{https://github.com/bastienlc/NOT}{https://github.com/bastienlc/NOT}. We've done a first experiment with generated synthetic data and a second one with a more realistic use-case using a large dataset.
+
+\subsection{Synthetic data}
+
+\subsection{Real dataset}
+
+Authors made experiments using faces from animes and real persons and the results were funny so we decided to make a similar one with a different dataset. More precisely, we took the CelebA dataset~\cite{celeba_dataset} which comprises 200k images of celebrity faces with attribute annotations. For the second dataset, we chose CartoonSet100K, a dataset introduced in~\cite{cartoonset_dataset}. It's a large-scale dataset containing 100k of 2D generated cartoon avatar images. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=.2]{figures/cartoonset-excerpt.png}
+    \caption{Images samples from CartoonSet100K}
+\end{figure}
+
+For this large-scale experiment we used a cloud instance with a NVidia A100 GPU with 40GB of memory. We increased the batch size per dataset from 64 to 128 and we used $128\times128$ images in place of $64\times64$ to get generated images with a nicer resolution. Increasing the batch size lead to better memory utilisation and quicker convergence as we'll see in the next paragraphs.
+
+On the figure below, you can see how the loss function evolves throughout the training. Unusually, the loss function here is fluctuating around the constant value 0 and that's expected: explain why it's expected TODO.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=.05]{figures/loss_real_dataset.png}
+    \caption{Loss function}
+\end{figure}
+
+\begin{figure}[htp!]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[scale=.15]{figures/media_images_Fixed Images_0_a56284c48d003ecfb6cd.png}
+        \caption{Iteration 1}
+        \label{fig:test_images_real_iter_1}
+    \end{subfigure}%
+    
+    \bigskip
+
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[scale=.15]{figures/media_images_Fixed Images_5000_0043c7527d827202e7ad.png}
+        \caption{Iteration 5000}
+        \label{fig:test_images_real_iter_med}
+    \end{subfigure}%
+
+    \bigskip
+
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[scale=.15]{figures/media_images_Fixed Images_13800_653d5de40c4ba6a777ca.png}
+        \caption{Iteration 13800}
+        \label{fig:test_images_real_iter_last}
+    \end{subfigure}%
+    \caption{Test images}
+    \label{fig:test_samples_large_scale}
+\end{figure}
+
+Those experiments are quite long in time (about a day for \~15k iterations with the parameters given above) so we restrict ourselves to only train the strong formulation model and the results for a fixed sample of the test set are given in~\ref{fig:test_samples_large_scale}.
+
+\subsubsection{Observations}
+
+Figure~\ref{fig:test_images_real_iter_1} lets us see the model initialisation.
+
+Furthermore, we witnessed realistic mappings of the real faces onto the cartoon avatar distribution around iteration 5000, see~\ref{fig:test_images_real_iter_med}. This is far less than what the authors observed in their experiments, this number was closer to 40k iterations for convergence. However, our images have an empty background so it might be easier in comparison with anime face images which contain a complex surrounding as they are extracted from animes. One can see that the color of the skin and the hair map well. However, the model struggles when there are glasses on the target image. It translates glasses into dark black holes. It's very surprising to see new avatars thanks to those mappings.
+
+At this point, we thought we were far from the end and we decided to continue the training for a night. Unfortunately, few thousands iterations later mode collapses appeared with the same avatar being mapped for a given batch. Surprisingly, the constant predicted face is changing with training without changing the mode collapse.
+
 \section{Conclusion}
+
+Random sentence for the conclusion in the meantime.
 
 \newpage
 \bibliography{bibliography}
