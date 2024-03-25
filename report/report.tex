@@ -148,6 +148,13 @@ The authors prove that the space of neural networks is rich enough to approximat
     \label{fig:sgad}
 \end{figure}
 
+\subsection{Application to generative modeling}
+
+Weak optimal transport can be used for generative modeling by learning a stochastic map between two (data) distributions. This stochastic map is learned by a neural network, which is trained to solve the weak optimal transport problem. One appealing aspect of weak optimal transport is that it allows for stochasticity in the solution, which is desirable in many generative modeling tasks such as image generation (for instance generating multiple plausible images from a single input image).
+
+However, learning with weak optimal transport also has its own set of challenges. For instance, the choice of the cost function can be difficult, for instance when the distributions are high-dimensional. Furthermore, the cost function needs to satisfy strict convexity conditions in the context of this paper to ensure that the solution to the maximin problem is a solution to the weak optimal transport problem. The training of the neural network can also be challenging, requiring careful tuning of hyperparameters. It is also subject to the usual challenges of generative modeling, such as mode collapse.
+
+From a theoretical standpoint, weak OT is also challenging because of the non-uniqueness of the solution, and the difficulty to derive theoretical solutions even in simple cases. The authors of the paper consider the weak quadratic cost with $\gamma=1$ for which a unique \textit{class} of solutions exists (i.e. all solutions verify some gradient property), but this is not the case in general.
 
 \section{Experiments}
 
@@ -168,14 +175,14 @@ The main results are shown in Figure~\ref{fig:toy_1}. The results are similar to
 
 In figure \ref{fig:toy_2}, we show the inner workings of the model. The left plot shows the average of the learned transport for different points in the input distribution. On average, points in the center will not move (they will be mapped equally in different directions), while points on the border will be moved towards the center because the input distribution has a bigger support than the target distribution. The middle plot shows the transport for a batch of points; we can see that there is a lot of movement to obtain the target distribution, and also that the same point can sometimes be moved in very different directions. The right plot shows the optimal transport plan obtained with the POT\footnote{https://pythonot.github.io/} library. The learned transport is very close to the optimal transport plan.
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/toy_1.png}
     \caption{Synthetic data experiment. Left: input gaussian distribution. Middle: target distribution. Right: learned transport of the input distribution to the target distribution.}
     \label{fig:toy_1}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/toy_2.png}
     \caption{Synthetic data experiment. Left: average of the learned transport for different points. Middle: learned transport for a batch of points. Right: optimal transport plan obtained with the POT library.}
@@ -244,7 +251,7 @@ At this point, we thought we were far from the end and we decided to continue th
 
 \section{Conclusion}
 
-Random sentence for the conclusion in the meantime.
+In this project, we studied the paper "Neural Optimal Transport" (Korotin, 2023) \cite{korotin-2022} which introduces an algorithm to train a neural network to learn the wrak optimal transport between two distributions. We conducted experiments using synthetic data and a real dataset, and obtained results similar to the ones in the paper. We also observed that the model is quite sensitive to hyperparameters such as the batch size and the number of iterations for the optimization of $T_\theta$. We also observed that the model is prone to mode collapse, which is a common issue in generative modeling. Overall, we found that the algorithm is effective at learning the optimal transport between two distributions, and that it can be used for generative modeling tasks.
 
 \newpage
 \bibliography{bibliography}
