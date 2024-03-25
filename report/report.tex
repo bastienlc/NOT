@@ -209,12 +209,12 @@ Authors made experiments using faces from animes and real persons and the result
 
 For this large-scale experiment we used a cloud instance with a NVidia A100 GPU with 40GB of memory. We increased the batch size per dataset from 64 to 128 and we used $128\times128$ images in place of $64\times64$ to get generated images with a nicer resolution. Increasing the batch size lead to better memory utilisation and quicker convergence as we'll see in the next paragraphs.
 
-On the figure below, you can see how the loss function evolves throughout the training. Unusually, the loss function here is fluctuating around the constant value 0 and that's expected: explain why it's expected TODO.
+On the figure below, you can see how the loss function evolves throughout the training. Unusually, the loss function here is fluctuating around the constant value 0 and that's expected: the algorithm outlined above optimises the difference of two antagonist loss terms so as one is diminishing the other is getting larger.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[scale=.05]{figures/loss_real_dataset.png}
-    \caption{Loss function}
+    \caption{${\cal L}_f$ during training}
 \end{figure}
 
 \begin{figure}[htp!]
