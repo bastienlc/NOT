@@ -24,9 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import gc
+
 import matplotlib.pyplot as plt
 import ot
-import gc
 import torch
 from matplotlib import collections as mc
 
@@ -62,7 +63,7 @@ def plot_bar_and_stochastic_2D(X_sampler, Y_sampler, T, ZD, Z_STD, plot_discrete
         axes[i].set_ylim(-2.5, 2.5)
 
     axes[0].set_title(
-        r"Map $x\mapsto \overline{T}(x)=\int_{\mathcal{Z}}T(x,z)d\mathbb{S}(z)$",
+        r"Map $x\mapsto \overline{T}(x)=\int_{\mathcal{Z}}T(x,z)d\rho(z)$",
         fontsize=22,
         pad=10,
     )
@@ -86,7 +87,7 @@ def plot_bar_and_stochastic_2D(X_sampler, Y_sampler, T, ZD, Z_STD, plot_discrete
             c="darkseagreen",
             edgecolors="black",
             zorder=2,
-            label=r"$x\sim\mathbb{P}$",
+            label=r"$x\sim\mu$",
         )
         axes[2].scatter(
             T_X_bar_np[:PLOT_X_SIZE_LEFT, 0],
@@ -129,7 +130,7 @@ def plot_bar_and_stochastic_2D(X_sampler, Y_sampler, T, ZD, Z_STD, plot_discrete
         c="darkseagreen",
         edgecolors="black",
         zorder=2,
-        label=r"$x\sim\mathbb{P}$",
+        label=r"$x\sim\mu$",
     )
     axes[0].scatter(
         T_XZ_np.mean(axis=1)[:PLOT_X_SIZE_LEFT, 0],
@@ -154,7 +155,7 @@ def plot_bar_and_stochastic_2D(X_sampler, Y_sampler, T, ZD, Z_STD, plot_discrete
         c="darkseagreen",
         edgecolors="black",
         zorder=2,
-        label=r"$x\sim\mathbb{P}$",
+        label=r"$x\sim\mu$",
     )
     axes[1].scatter(
         T_XZ_np[:PLOT_X_SIZE_RIGHT, :PLOT_Z_SIZE_RIGHT, 0].flatten(),
@@ -203,37 +204,45 @@ def plot_generated_2D(X_sampler, Y_sampler, T, ZD, Z_STD):
     axes[1].scatter(Y_np[:, 0], Y_np[:, 1], c="peru", edgecolors="black")
     axes[2].scatter(T_XZ_np[:, 0], T_XZ_np[:, 1], c="wheat", edgecolors="black")
 
-    axes[0].set_title(r"Input $x\sim\mathbb{P}$", fontsize=22, pad=10)
-    axes[1].set_title(r"Target $y\sim\mathbb{Q}$", fontsize=22, pad=10)
-    axes[2].set_title(
-        r"Fitted $T(x,z)_{\#}(\mathbb{P}\times\mathbb{S})$", fontsize=22, pad=10
-    )
+    axes[0].set_title(r"Input $x\sim\mu$", fontsize=22, pad=10)
+    axes[1].set_title(r"Target $y\sim\nu$", fontsize=22, pad=10)
+    axes[2].set_title(r"Fitted $T(x,z)_{\#}(\mu\times\rho)$", fontsize=22, pad=10)
 
     fig.tight_layout()
     return fig, axes
 
+
 def plot_images(X, Y, T):
-    freeze(T);
+    freeze(T)
     with torch.no_grad():
         T_X = T(X)
-        imgs = torch.cat([X, T_X, Y]).to('cpu').permute(0,2,3,1).mul(0.5).add(0.5).numpy().clip(0,1)
+        imgs = (
+            torch.cat([X, T_X, Y])
+            .to("cpu")
+            .permute(0, 2, 3, 1)
+            .mul(0.5)
+            .add(0.5)
+            .numpy()
+            .clip(0, 1)
+        )
 
     fig, axes = plt.subplots(3, 10, figsize=(15, 4.5), dpi=150)
     for i, ax in enumerate(axes.flatten()):
         ax.imshow(imgs[i])
         ax.get_xaxis().set_visible(False)
         ax.set_yticks([])
-        
-    axes[0, 0].set_ylabel('X', fontsize=24)
-    axes[1, 0].set_ylabel('T(X)', fontsize=24)
-    axes[2, 0].set_ylabel('Y', fontsize=24)
-    
+
+    axes[0, 0].set_ylabel("X", fontsize=24)
+    axes[1, 0].set_ylabel("T(X)", fontsize=24)
+    axes[2, 0].set_ylabel("Y", fontsize=24)
+
     fig.tight_layout(pad=0.001)
-    torch.cuda.empty_cache(); gc.collect()
+    torch.cuda.empty_cache()
+    gc.collect()
     return fig, axes
+
 
 def plot_random_images(X_sampler, Y_sampler, T):
     X = X_sampler.sample(10)
     Y = Y_sampler.sample(10)
     return plot_images(X, Y, T)
-
