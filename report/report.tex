@@ -36,6 +36,8 @@
 \usepackage[noend]{algpseudocode}
 \captionsetup[subfigure]{justification=centering}
 
+\newtheorem{theorem}{Theorem}
+
 \setlength{\belowcaptionskip}{-10pt}
 \newcommand{\specialcell}[2][c]{%
   \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
@@ -56,6 +58,8 @@
 \DeclareMathOperator*{\Argmin}{\text{Argmin}}
 \DeclareMathOperator*{\Argmax}{\text{Argmax}}
 \DeclareMathOperator*{\Cost}{\text{Cost}}
+	
+\newcommand{\indep}{\perp \!\!\! \perp}
 
 \title{Generative modeling project : Neural Optimal Transport}
 \author[1]{Paul Barbier}
@@ -94,7 +98,7 @@ For weak OT cost $C$, and $f$ defined on $\mathcal{Y}$ sufficiently regular, the
 \begin{equation}
     f^C(x) = \inf_{\rho\in \mathcal{P}(\mathcal{Y})} \left\{C(x,\rho)-\int_{\mathcal{Y}}f(y)d\rho(y)\right\}
 \end{equation}
-The dual form of the weak OT problem is then :
+where $\mathcal{P}(\mathcal{Y})$ denotes the set of probability distributions on $\mathcal{Y}$. The dual form of the weak OT problem is then :
 \begin{equation}
     f^*\in\Argmax_{f} \int_{\mathcal{X}} f^C(x)d\mu(x) + \int_{\mathcal{Y}} f(y)d\nu(y) \quad\quad \Cost(\mu,\nu) = \int_{\mathcal{X}} f^{*C}(x)d\mu(x) + \int_{\mathcal{Y}} f^*(y)d\nu(y)
 \end{equation}
@@ -118,7 +122,11 @@ This result can be integrated against $\mu$ to replace the dual weak OT problem 
     \end{split}
     \label{eq:weak_ot_reformulation}
 \end{align}
-where $T:\mathcal{X}\times\mathcal{Z}\to\mathcal{Y}$. The proofs of these results are in the paper \cite{korotin-2022}. This reformulation can be interpreted in the following way : the solution to the weak OT problem is a \textbf{stochastic map} $T:\mathcal{X}\times \mathcal{Z}\to \mathcal{Y}$ that is split into two parts, a deterministic part $T(x,\cdot)$ and a stochastic part $z\mapsto T(x,z)$. $\mathcal{Z}$ is a latent space that models the randomness in the transport.
+where $T:\mathcal{X}\times\mathcal{Z}\to\mathcal{Y}$. The proofs of these results are in the paper \cite{korotin-2022}. This reformulation can be interpreted in the following way : the solution to the weak OT problem is a \textbf{stochastic map} $T:\mathcal{X}\times \mathcal{Z}\to \mathcal{Y}$ that is split into two parts, a deterministic part $T(x,\cdot)$ and a stochastic part $z\mapsto T(x,z)$. $\mathcal{Z}$ is a latent space that models the randomness in the transport. Adding $z$ is known as \textbf{noise outsourcing} (see \cite{kallenberg2002foundations}). Actually, there is a strong theorem behind this trick and we recall the idea here:
+
+\begin{theorem}
+    If $X$ and $Y$ are random variables in suitable spaces ${\cal X}$ and ${\cal Y}$, then there exists $\eta\sim {\cal U}([0,1])$ with $\eta \indep X$ and a function $h\: [0, 1]\times {\cal X} \longrightarrow {\cal Y}$ such that $(X, Y) = (X, h(\eta, X))$ almost surely.
+\end{theorem}
 
 Solving (\ref{eq:weak_ot_reformulation}) does not necessarily yield a solution $T^*$ to the weak OT problem. However under sufficient convexity conditions on $C$ the solution to the maximin problem is a solution to the weak OT problem. With that in mind the authors introduce an algorithm to solve this problem and restrict their attention to such cost functions.
 
@@ -247,7 +255,7 @@ Figure~\ref{fig:test_images_real_iter_1} lets us see the model initialisation.
 
 Furthermore, we witnessed realistic mappings of the real faces onto the cartoon avatar distribution around iteration 5000, see~\ref{fig:test_images_real_iter_med}. This is far less than what the authors observed in their experiments, this number was closer to 40k iterations for convergence. However, our images have an empty background so it might be easier in comparison with anime face images which contain a complex surrounding as they are extracted from animes. One can see that the color of the skin and the hair map well. However, the model struggles when there are glasses on the target image. It translates glasses into dark black holes. It's very surprising to see new avatars thanks to those mappings.
 
-At this point, we thought we were far from the end and we decided to continue the training for a night. Unfortunately, few thousands iterations later mode collapses appeared with the same avatar being mapped for a given batch. Surprisingly, the constant predicted face is changing with training without changing the mode collapse.
+At this point, we thought we were far from the end and we decided to continue the training for a night. Unfortunately, few thousands iterations later mode collapses appeared with the same avatar being mapped for a given batch. Surprisingly, the constant predicted face is changing with training steps without changing the mode collapse.
 
 \section{Conclusion}
 
