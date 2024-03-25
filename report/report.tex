@@ -155,6 +155,33 @@ For this project, we conducted experiments using the code provided by the author
 
 \subsection{Synthetic data}
 
+First, we conducted experiments using synthetic data on a simple 2D grid. Our spaces $\mathcal{X}$ and $\mathcal{Y}$ are $\R^2$ and we adopt the same $\gamma$-weak quadratic cost function as in the paper (\ref{eq:toy_cost}) (with $\gamma=1$), thus solving the weak OT problem.
+\begin{equation}
+    C\big{(}x,\mu\big{)}=\int_{\mathcal{Y}}\frac{1}{2}\|x-y\|^{2}d\mu(y)-\frac{1}{2} \text{Var}(\mu)=\frac{1}{2}\|x-\int_{\mathcal{Y}}y\,d\mu(y)\|^{2}
+    \label{eq:toy_cost}
+\end{equation}
+The input distribution is a $2D$ standard normal distribution and the target distribution is a mixture of two semicircles ("moon distribution"). This is not too different from the toy examples in the paper which were either a spiral or a mixture of gaussians.
+
+The networks are simple feedforward neural networks with 2 hidden layers of $100$ hidden units each and ReLU activations. We used similar hyperparameters to the ones in the paper (batch size of $64$, $10$ iterations for the optimization of $T_\theta$, Adam optimizer, $10000$ steps...). The training is straightforward with these parameters, but while experimenting with different ones we found that the model is quite sensitive to the batch size and the number of iterations for the optimization of $T_\theta$.
+
+The main results are shown in Figure~\ref{fig:toy_1}. The results are similar to the ones in the paper with a good mapping of the input distribution to the target distribution. The resulting distribution is a bit more noisy than the target distribution but the general shape is well captured.
+
+In figure \ref{fig:toy_2}, we show the inner workings of the model. The left plot shows the average of the learned transport for different points in the input distribution. On average, points in the center will not move (they will be mapped equally in different directions), while points on the border will be moved towards the center because the input distribution has a bigger support than the target distribution. The middle plot shows the transport for a batch of points; we can see that there is a lot of movement to obtain the target distribution, and also that the same point can sometimes be moved in very different directions. The right plot shows the optimal transport plan obtained with the POT\footnote{https://pythonot.github.io/} library. The learned transport is very close to the optimal transport plan.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/toy_1.png}
+    \caption{Synthetic data experiment. Left: input gaussian distribution. Middle: target distribution. Right: learned transport of the input distribution to the target distribution.}
+    \label{fig:toy_1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/toy_2.png}
+    \caption{Synthetic data experiment. Left: average of the learned transport for different points. Middle: learned transport for a batch of points. Right: optimal transport plan obtained with the POT library.}
+    \label{fig:toy_2}
+\end{figure}
+
 \subsection{Real dataset}
 
 Authors made experiments using faces from animes and real persons and the results were funny so we decided to make a similar one with a different dataset. More precisely, we took the CelebA dataset~\cite{celeba_dataset} which comprises 200k images of celebrity faces with attribute annotations. For the second dataset, we chose CartoonSet100K, a dataset introduced in~\cite{cartoonset_dataset}. It's a large-scale dataset containing 100k of 2D generated cartoon avatar images.
