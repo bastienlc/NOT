@@ -231,7 +231,24 @@
 
 \subsection{SGAD}
 \begin{frame}{Stochastic Gradient Ascent Descent (SGAD)}
-    TODO: Need to add the algorithm, couldn't do it easily with a rescalebox.
+    \begin{algorithm}[H]
+        \caption{\footnotesize Stochastic Gradient Ascent Descent algorithm}
+        \begin{algorithmic}[1]
+            \scriptsize
+            \State \textbf{Input}: distributions $\mu,\nu,\rho$ accessible by samples, mapping network $T_{\theta}:\mathbb{R}^{m}\times\mathbb{R}^{n}\rightarrow\mathbb{R}^{d}$, potential network $f_{\omega}:\mathbb{R}^{n}\rightarrow\mathbb{R}$, number of inner iterations $K_{T}$, (weak) cost $C:\mathcal{X}\times\mathcal{P}(\mathcal{Y})\rightarrow\mathbb{R}$, empirical estimator $\widehat{C}\big{(}x,T(x,Z)\big{)}$ for the cost
+            \State \textbf{Output}: learned stochastic OT map $T_{\theta}$ representing an OT plan between distributions $\mu,\nu$
+            \Repeat
+            \State Sample batches $Y\sim\nu$, $X\sim\mu$, for each $x\in X$ sample batch $Z_{x}\sim\rho$
+            \State $\mathcal{L}_{f}\leftarrow\frac{1}{|X|}\sum_{x\in X}\frac{1}{|Z_{x}|}\sum_{z \in Z_{x}}f_{\omega}\big{(}T_{\theta}(x,z)\big{)}-\frac{1}{|Y|}\sum_{y\in Y}f_{ \omega}(y)$
+            \State Update $\omega$ by using $\frac{\partial\mathcal{L}_{f}}{\partial\theta}$
+            \For {$k_{T}=1,2,\ldots,K_{T}$}
+            \State Sample batch $X\sim\mu$, for each $x\in X$ sample batch $Z_{x}\sim\rho$
+            \State $\mathcal{L}_{T}\leftarrow\frac{1}{|X|}\sum_{x\in X}\big{[}\widehat{C}\big{(}x,T_{\theta}(x,Z_{x})\big{)}-\frac{1}{|Z_{x}|}\sum_{z\in Z_{x}}f_{\omega}\big{(} T_{\theta}(x,z)\big{)}\big{]}$
+            \State Update $\theta$ by using $\frac{\partial\mathcal{L}_{\theta}}{\partial\theta}$
+            \EndFor
+            \Until{converged}
+        \end{algorithmic}
+    \end{algorithm}
 \end{frame}
 
 \section{Experiments}
