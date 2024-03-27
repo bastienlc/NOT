@@ -98,6 +98,17 @@
 	
 \newcommand{\indep}{\perp \!\!\! \perp}
 
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
@@ -126,7 +137,15 @@
 
 \section{Introduction}
 \begin{frame}{Introduction}
+    Well known models for generating images:
+    \begin{itemize}
+        \item GANs
+        \item VAEs
+        \item Normalizing Flows
+        \item Diffusion models
+    \end{itemize}
 
+    $\rightarrow$ Explicit \textbf{Optimal Transport} (OT) is a recent approach to generative models.
 \end{frame}
 
 \section{Optimal Transport}
@@ -143,13 +162,13 @@
         T^* \in \Argmin_{T\#\mu=\nu} \int_{\mathcal{X}} c(x,T(x))d\mu(x)
     \end{equation}
 
-    where $(T\#\mu)(A)=\mu(T^{-1}(A))$ is the pushforward measure.
-
-    Hence, one can define:
-
+    \begin{itemize}
+        \item Optimal transport cost:
+    \end{itemize}
     \begin{equation}
         \Cost(\mu,\nu) = \int_{\mathcal{X}} c(x,T^*(x))d\mu(x)
     \end{equation}
+    $\rightarrow$ \textbf{Deterministic} mapping $T^*$.
 
 \end{frame}
 
@@ -161,10 +180,33 @@
     \begin{equation}
         \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)d\pi(x,y)
     \end{equation}
-    and we can define:
+    \begin{itemize}
+        \item Optimal transport cost:
+    \end{itemize}
     \begin{equation}
         \Cost(\mu,\nu) = \int_{\mathcal{X}\times\mathcal{Y}} c(x,y)d\pi^*(x,y)
     \end{equation}
+
+    $\rightarrow$ \textbf{Stochastic} mapping $\pi^*$.
+\end{frame}
+
+\begin{frame}{Weak OT}
+    \begin{itemize}
+        \item Generalization to \textbf{weak} costs :
+              $$C: \mathcal{X}\times \mathcal{P}(\mathcal{Y})\to\R$$
+        \item Problem: find a \textbf{transport plan} $\pi^*\in \Pi(\mu,\nu)$ such that:
+    \end{itemize}
+    \begin{equation}
+        \pi^* \in \Argmin_{\pi\in\Pi(\mu,\nu)} \int_{\mathcal{X}} C(x,\pi(\cdot|x))d\pi(x)
+    \end{equation}
+    \begin{itemize}
+        \item Optimal transport cost:
+    \end{itemize}
+    \begin{equation}
+        \Cost(\mu,\nu) = \int_{\mathcal{X}} C(x,\pi^*(\cdot|x))d\pi^*(x)
+    \end{equation}
+
+    $\rightarrow$ \textbf{Stochastic} mapping $\pi^*$.
 \end{frame}
 
 \subsection{Weak OT Duality}
@@ -174,14 +216,13 @@
     \begin{equation}
         f^C(x) = \inf_{\rho\in \mathcal{P}(\mathcal{Y})} \left\{C(x,\rho)-\int_{\mathcal{Y}}f(y)d\rho(y)\right\}
     \end{equation}
-    where $\mathcal{P}(\mathcal{Y})$ denotes the set of probability distributions on $\mathcal{Y}$.
 
     Then, the dual form of the weak OT problem writes:
 
     \begin{equation}
         f^*\in\Argmax_{f} \int_{\mathcal{X}} f^C(x)d\mu(x) + \int_{\mathcal{Y}} f(y)d\nu(y)
     \end{equation}
-    and the cost can be defined as follows
+    and the transport cost is equal to:
     \begin{equation}
         \Cost(\mu,\nu) = \int_{\mathcal{X}} f^{*C}(x)d\mu(x) + \int_{\mathcal{Y}} f^*(y)d\nu(y)
     \end{equation}
@@ -193,7 +234,7 @@
 \subsection{Weak dual OT reformulation}
 \begin{frame}{Weak dual OT reformulation}
     \begin{itemize}
-        \item $\mathcal{X}\subset\R^n$, $\mathcal{Y}\subset\R^m$ and $\mathcal{Y}\subset\R^d$.
+        \item New probability space $\mathcal{Z}$.
         \item Let $\rho\in \mathcal{P}(\mathcal{Z})$ with some basic assumptions.
     \end{itemize}
     Then, we have:
@@ -205,8 +246,9 @@
         \Cost(\mu,\nu) = \sup_{f} \inf_{T} \mathcal{L}(f,T)
     \end{equation}
 
-    where
-    $\mathcal{L}(f,T) = \int_{\mathcal{Y}}fd\nu + \int_{\mathcal{X}} \left( C(x, T(x,\cdot)\#\rho)-\int_{\mathcal{Z}}f(T(x,z))d\rho(z)\right)d\mu(x)$
+    \resizebox*{\textwidth}{!}{
+        $\displaystyle\mathcal{L}(f,T) = \int_{\mathcal{Y}}fd\nu + \int_{\mathcal{X}} \left( C(x, T(x,\cdot)\#\rho)-\int_{\mathcal{Z}}f(T(x,z))d\rho(z)\right)d\mu(x)$}
+
 \end{frame}
 
 \begin{frame}{The trick: noise outsourcing}
