@@ -15,7 +15,7 @@
 %	PACKAGES AND THEMES
 %----------------------------------------------------------------------------------------
 
-\documentclass{beamer}
+\documentclass[aspectratio=169]{beamer}
 
 \mode<presentation> {
 
@@ -246,8 +246,7 @@
         \Cost(\mu,\nu) = \sup_{f} \inf_{T} \mathcal{L}(f,T)
     \end{equation}
 
-    \resizebox*{\textwidth}{!}{
-        $\displaystyle\mathcal{L}(f,T) = \int_{\mathcal{Y}}fd\nu + \int_{\mathcal{X}} \left( C(x, T(x,\cdot)\#\rho)-\int_{\mathcal{Z}}f(T(x,z))d\rho(z)\right)d\mu(x)$}
+    $$\text{With }\mathcal{L}(f,T) = \int_{\mathcal{Y}}fd\nu + \int_{\mathcal{X}} \left( C(x, T(x,\cdot)\#\rho)-\int_{\mathcal{Z}}f(T(x,z))d\rho(z)\right)d\mu(x)$$
 
 \end{frame}
 
@@ -262,10 +261,10 @@
     \end{theorem}
 \end{frame}
 
-\begin{frame}{Weak OT: A summary}
+\begin{frame}{Weak OT reformulation: A summary}
     \begin{figure}
         \centering
-        \includegraphics[width=0.9\linewidth]{figures/transportation-plan.png}
+        \includegraphics[width=0.6\linewidth]{figures/transportation-plan.png}
         \label{transportation-map}
         \caption{Transportation map with outsourced noise $z$ (taken from~\cite{korotin-2022})}
     \end{figure}
